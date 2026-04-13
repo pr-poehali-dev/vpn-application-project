@@ -2,6 +2,7 @@ import Icon from '@/components/ui/icon';
 
 interface HomeProps {
   onNavigate: (page: string) => void;
+  user?: { plan: string } | null;
 }
 
 const stats = [
@@ -17,7 +18,7 @@ const features = [
   { icon: 'Fingerprint', title: 'No-Log политика', desc: 'Мы не храним никаких данных о вашей активности и соединениях', badge: 'Verified' },
 ] as const;
 
-export default function Home({ onNavigate }: HomeProps) {
+export default function Home({ onNavigate, user }: HomeProps) {
   return (
     <div className="min-h-full grid-bg">
       {/* Hero */}
@@ -89,6 +90,31 @@ export default function Home({ onNavigate }: HomeProps) {
           ))}
         </div>
       </div>
+
+      {/* Pricing banner */}
+      {(!user || user.plan === 'free') && (
+        <div className="px-6 pb-8">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-400/10 to-emerald-400/5 border border-emerald-400/25 p-5">
+            <div className="absolute right-0 bottom-0 w-40 h-40 bg-emerald-400/5 rounded-full translate-x-1/2 translate-y-1/2 pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="Zap" size={16} className="text-emerald-400" />
+                <span className="text-sm font-semibold text-white">Перейдите на Pro</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                Безлимитный трафик, все 47 серверов и Kill Switch. От 299 ₽/месяц при оплате за год.
+              </p>
+              <button
+                onClick={() => onNavigate('pricing')}
+                className="flex items-center gap-1.5 bg-emerald-400 text-gray-900 font-semibold text-xs px-4 py-2 rounded-lg hover:bg-emerald-300 transition-colors"
+              >
+                Смотреть тарифы
+                <Icon name="ArrowRight" size={13} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

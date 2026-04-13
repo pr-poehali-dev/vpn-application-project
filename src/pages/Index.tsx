@@ -8,15 +8,17 @@ import Help from './Help';
 import About from './About';
 import Auth from './Auth';
 import Profile from './Profile';
+import Pricing from './Pricing';
 import { getToken, getMe, User } from '@/lib/auth';
 
-type Page = 'home' | 'connect' | 'servers' | 'stats' | 'help' | 'about' | 'profile';
+type Page = 'home' | 'connect' | 'servers' | 'stats' | 'help' | 'about' | 'profile' | 'pricing';
 
 const navItems = [
   { id: 'home', label: 'Главная', icon: 'Home' },
   { id: 'connect', label: 'Подключение', icon: 'Shield' },
   { id: 'servers', label: 'Серверы', icon: 'Globe' },
   { id: 'stats', label: 'Статистика', icon: 'BarChart2' },
+  { id: 'pricing', label: 'Тарифы', icon: 'CreditCard' },
   { id: 'help', label: 'Справка', icon: 'HelpCircle' },
   { id: 'about', label: 'О приложении', icon: 'Info' },
 ] as const;
@@ -57,18 +59,21 @@ export default function Index() {
 
   const handleNavigate = (p: string) => setPage(p as Page);
 
+  const openAuth = () => { setShowAuth(true); setPage('home'); };
+
   const renderPage = () => {
     if (showAuth) return <Auth onSuccess={handleAuthSuccess} />;
     switch (page) {
-      case 'home': return <Home onNavigate={handleNavigate} />;
+      case 'home': return <Home onNavigate={handleNavigate} user={user} />;
       case 'connect': return <Connect />;
       case 'servers': return <Servers />;
       case 'stats': return <Stats />;
       case 'help': return <Help />;
       case 'about': return <About />;
+      case 'pricing': return <Pricing user={user} onAuthRequired={openAuth} />;
       case 'profile':
         return user && token
-          ? <Profile user={user} token={token} onLogout={handleLogout} />
+          ? <Profile user={user} token={token} onLogout={handleLogout} onUpgrade={() => { setShowAuth(false); setPage('pricing'); }} />
           : <Auth onSuccess={handleAuthSuccess} />;
       default: return <Home onNavigate={handleNavigate} />;
     }

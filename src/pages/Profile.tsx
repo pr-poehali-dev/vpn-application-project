@@ -6,6 +6,7 @@ interface ProfileProps {
   user: User;
   token: string;
   onLogout: () => void;
+  onUpgrade: () => void;
 }
 
 const planLabels: Record<string, { label: string; color: string; bg: string }> = {
@@ -14,7 +15,7 @@ const planLabels: Record<string, { label: string; color: string; bg: string }> =
   business: { label: 'Business', color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
 };
 
-export default function Profile({ user, token, onLogout }: ProfileProps) {
+export default function Profile({ user, token, onLogout, onUpgrade }: ProfileProps) {
   const [logoutLoading, setLogoutLoading] = useState(false);
 
   const plan = planLabels[user.plan] ?? planLabels.free;
@@ -71,9 +72,12 @@ export default function Profile({ user, token, onLogout }: ProfileProps) {
             <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
               Бесплатный план включает 5 ГБ трафика в месяц и доступ к 3 серверам. Обновитесь для снятия ограничений.
             </p>
-            <button className="w-full flex items-center justify-center gap-2 bg-emerald-400 text-gray-900 font-semibold py-2.5 rounded-lg hover:bg-emerald-300 transition-all duration-200 text-sm">
+            <button
+              onClick={onUpgrade}
+              className="w-full flex items-center justify-center gap-2 bg-emerald-400 text-gray-900 font-semibold py-2.5 rounded-lg hover:bg-emerald-300 transition-all duration-200 text-sm"
+            >
               <Icon name="Zap" size={15} />
-              Перейти на Pro
+              Посмотреть тарифы
             </button>
           </div>
         ) : (
