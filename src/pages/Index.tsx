@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import Home from './Home';
 import Connect from './Connect';
@@ -6,8 +6,11 @@ import Servers from './Servers';
 import Stats from './Stats';
 import Help from './Help';
 import About from './About';
+import Auth from './Auth';
+import Profile from './Profile';
+import { getToken, getMe, User } from '@/lib/auth';
 
-type Page = 'home' | 'connect' | 'servers' | 'stats' | 'help' | 'about';
+type Page = 'home' | 'connect' | 'servers' | 'stats' | 'help' | 'about' | 'profile';
 
 const navItems = [
   { id: 'home', label: 'Главная', icon: 'Home' },
@@ -20,10 +23,42 @@ const navItems = [
 
 export default function Index() {
   const [page, setPage] = useState<Page>('home');
+  const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [token, setTokenState] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = getToken();
+    if (t) {
+      getMe(t).then(res => {
+        if (res.user) {
+          setUser(res.user);
+          setTokenState(t);
+        }
+        setAuthChecked(true);
+      });
+    } else {
+      setAuthChecked(true);
+    }
+  }, []);
+
+  const handleAuthSuccess = (u: User, t: string) => {
+    setUser(u);
+    setTokenState(t);
+    setShowAuth(false);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setTokenState(null);
+    setPage('home');
+  };
 
   const handleNavigate = (p: string) => setPage(p as Page);
 
   const renderPage = () => {
+    if (showAuth) return <Auth onSuccess={handleAuthSuccess} />;
     switch (page) {
       case 'home': return <Home onNavigate={handleNavigate} />;
       case 'connect': return <Connect />;
@@ -31,9 +66,21 @@ export default function Index() {
       case 'stats': return <Stats />;
       case 'help': return <Help />;
       case 'about': return <About />;
+      case 'profile':
+        return user && token
+          ? <Profile user={user} token={token} onLogout={handleLogout} />
+          : <Auth onSuccess={handleAuthSuccess} />;
       default: return <Home onNavigate={handleNavigate} />;
     }
   };
+
+  if (!authChecked) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -71,8 +118,32 @@ export default function Index() {
           ))}
         </nav>
 
-        <div className="px-4 py-4 border-t border-border">
-          <div className="text-xs text-muted-foreground font-mono">v2.4.1</div>
+        <div className="px-3 pb-3 border-t border-border pt-2">
+          {user ? (
+            <button
+              onClick={() => { setShowAuth(false); setPage('profile'); }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all duration-150 text-left text-sm ${page === 'profile' ? 'bg-emerald-400/10 text-emerald-400 font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
+            >
+              <div className="w-6 h-6 rounded-full bg-emerald-400/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-bold text-emerald-400">
+                  {(user.name || user.email).slice(0, 1).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium truncate">{user.name || user.email}</div>
+                <div className="text-[10px] text-muted-foreground capitalize">{user.plan}</div>
+              </div>
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowAuth(true)}
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-150"
+            >
+              <Icon name="LogIn" size={16} />
+              Войти
+            </button>
+          )}
+          <div className="text-xs text-muted-foreground font-mono px-3 pt-2">v2.4.1</div>
         </div>
       </aside>
 
@@ -85,9 +156,29 @@ export default function Index() {
             </div>
             <span className="font-bold text-white text-sm">Secure<span className="text-emerald-400">VPN</span></span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-blink" />
-            <span className="text-xs text-emerald-400 font-medium">Активно</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-blink" />
+              <span className="text-xs text-emerald-400 font-medium">Активно</span>
+            </div>
+            {user ? (
+              <button
+                onClick={() => { setShowAuth(false); setPage('profile'); }}
+                className="w-7 h-7 rounded-full bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center"
+              >
+                <span className="text-xs font-bold text-emerald-400">
+                  {(user.name || user.email).slice(0, 1).toUpperCase()}
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAuth(true)}
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+              >
+                <Icon name="LogIn" size={14} />
+                Войти
+              </button>
+            )}
           </div>
         </header>
 
